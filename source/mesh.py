@@ -34,6 +34,9 @@ class Mesh:
         for i, tag in enumerate(node_tags):
             self.coordinates[node_tag_to_idx[tag]] = coordinates[3 * i: 3 * (i+1)]
 
+        for i in range(1, 4):
+            print(gmsh.model.mesh.get_element_properties(i))
+
     def draw(self):
         triangulation = tri.Triangulation(
             x=self.coordinates[:, 0],
@@ -43,3 +46,9 @@ class Mesh:
         plt.triplot(triangulation)
         plt.savefig('mesh.png')
         plt.close()
+
+
+if __name__ == '__main__':
+
+    mesh = Mesh("meshes/rectangle.msh")
+    mesh.draw()
