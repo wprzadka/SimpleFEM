@@ -34,13 +34,11 @@ if __name__ == '__main__':
     rhs_func = lambda x: -np.sin(x[0] * np.pi) * np.sin(x[1] * np.pi)
     # dirichlet_func = lambda x: 1 if x[0] < 0.1 or x[0] > 0.9 else 0
     dirichlet_func = lambda x: 0
-    neumann_func = lambda x: 0
 
     fem = LaplaceSetup(
         mesh=mesh,
         rhs_func=rhs_func,
-        dirichlet_func=dirichlet_func,
-        neumann_func=neumann_func
+        dirichlet_func=dirichlet_func
     )
     results = fem.solve()
     print("solution")
