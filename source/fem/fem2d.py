@@ -9,9 +9,11 @@ class FEM:
             self,
             mesh: Mesh,
             rhs_func: callable,
-            dirichlet_func: Optional[callable],
-            neumann_func: Optional[callable]
+            dirichlet_func: Optional[callable] = None,
+            neumann_func: Optional[callable] = None
     ):
+        assert not (mesh.dirichlet_boundaries.size > 0 and dirichlet_func is None)
+        assert not (mesh.neumann_boundaries.size > 0 and neumann_func is None)
         self.mesh = mesh
         self.rhs_func = rhs_func
         self.dirichlet_func = dirichlet_func
