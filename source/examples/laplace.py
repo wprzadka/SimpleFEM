@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mesh import Mesh
+from source.mesh import Mesh
 from matplotlib import tri
 
-from fem.laplace_setup import LaplaceSetup
+from source.fem.laplace_setup import LaplaceSetup
 
 
 def plot_exact_solution(exact: callable):
