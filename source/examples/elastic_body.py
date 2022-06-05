@@ -9,32 +9,42 @@ from matplotlib import tri
 from source.fem.elasticity_setup import ElasticitySetup
 
 
-def plot_exact_solution(exact: callable):
-    X, Y = np.meshgrid(np.linspace(0, 1), np.linspace(0, 1))
-    exact_values = np.reshape(exact(np.stack((X, Y))), X.shape)
-    plt.contour(X, Y, exact_values)
-    plt.savefig('exact.png')
-    plt.close()
-
-
-def plot_results(results: np.ndarray):
+def plot_results(mesh: Mesh, magnitudes: np.ndarray):
     triangulation = tri.Triangulation(
         x=mesh.coordinates2D[:, 0],
         y=mesh.coordinates2D[:, 1],
         triangles=mesh.nodes_of_elem
     )
-    plt.tricontourf(triangulation, results)
+    plt.tricontourf(triangulation, magnitudes)
     plt.colorbar()
     plt.savefig('results.png')
+    plt.close()
+
+
+def plot_dispalcements(mesh: Mesh, displacements: np.ndarray):
+    before = tri.Triangulation(
+        x=mesh.coordinates2D[:, 0],
+        y=mesh.coordinates2D[:, 1],
+        triangles=mesh.nodes_of_elem
+    )
+    plt.triplot(before, color='#1f77b4')
+    after = tri.Triangulation(
+        x=mesh.coordinates2D[:, 0] + displacements[:, 0],
+        y=mesh.coordinates2D[:, 1] + displacements[:, 1],
+        triangles=mesh.nodes_of_elem
+    )
+    plt.triplot(after, color='#ff7f0e')
+    plt.grid()
+    plt.savefig('displacements.png')
     plt.close()
 
 
 if __name__ == '__main__':
     mesh = Mesh('meshes/rectangle.msh')
 
-    rhs_func = lambda x: np.array([0, 1])
+    rhs_func = lambda x: np.array([0, 0])
     dirichlet_func = lambda x: np.array([0, 0])
-    neumann_func = lambda x: np.array([0, 0])
+    neumann_func = lambda x: np.array([-0.1, -0.2])
 
 
     class MaterialProperty(Enum):
@@ -48,18 +58,13 @@ if __name__ == '__main__':
         rhs_func=rhs_func,
         dirichlet_func=dirichlet_func,
         neumann_func=neumann_func,
-        young_modulus=MaterialProperty.BerylliumCopper.value[0],
-        poisson_ratio=MaterialProperty.BerylliumCopper.value[1]
+        young_modulus=MaterialProperty.CarbonSteel.value[0],
+        poisson_ratio=MaterialProperty.CarbonSteel.value[1]
     )
     results = fem.solve()
-    displacements = results[:fem.mesh.nodes_num] + results[fem.mesh.nodes_num:]
-
-    print("solution")
-    print(displacements)
+    displacements = np.vstack((results[:mesh.nodes_num], results[mesh.nodes_num:])).T
+    displacement_magnitudes = np.sqrt(displacements[:, 0] ** 2 + displacements[:, 1] ** 2)
 
     # plot results of FEM
-    plot_results(displacements)
-
-    # validation
-    exact = lambda x: -np.sin(x[0] * np.pi) * np.sin(x[1] * np.pi) / (2 * np.pi ** 2)
-    plot_exact_solution(exact)
+    plot_results(mesh, displacement_magnitudes)
+    plot_dispalcements(mesh, displacements)
