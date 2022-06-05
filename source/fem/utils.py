@@ -6,3 +6,7 @@ def area_of_triangle(coords: np.ndarray) -> float:
     doubleT = coords[1:3].T - np.expand_dims(coords[0], 1)
     areaT = np.abs(np.linalg.det(doubleT)) / 2
     return areaT
+
+
+def center_of_mass(coords: np.ndarray) -> np.ndarray:
+    return np.sum(coords, 0) / coords.shape[0]

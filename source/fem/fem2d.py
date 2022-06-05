@@ -1,6 +1,7 @@
 from typing import Optional
 import numpy as np
 
+from source.fem import utils
 from source.mesh import Mesh
 
 
@@ -20,14 +21,13 @@ class FEM:
         self.neumann_func = neumann_func
 
     def rhs_val(self, vertices: np.ndarray) -> float:
-        T = vertices[1:3].T - np.expand_dims(vertices[0], 1)
-        detT = np.linalg.det(T)
-        center = np.sum(vertices, 0) / 3
-        return detT / 6 * self.rhs_func(center)
+        T = utils.area_of_triangle(vertices)
+        center = utils.center_of_mass(vertices)
+        return T / 3 * self.rhs_func(center)
 
     def neumann_val(self, vertices: np.array) -> float:
         # vertices = [[x0, y0], [x1, y1]]
-        center = np.sum(vertices, 0) / 2
+        center = utils.center_of_mass(vertices)
         length = np.sqrt((vertices[1, 0] - vertices[0, 0]) ** 2 + (vertices[1, 1] - vertices[0, 1]) ** 2)
 
         return self.neumann_func(center) * length / 2
@@ -35,7 +35,7 @@ class FEM:
     def dirichlet_val(self, vertices: np.array) -> np.ndarray:
         # vertices = [[x0, y0], [x1, y1]]
         values = np.array([self.dirichlet_func(v) for v in vertices])
-        return np.expand_dims(values, 1)
+        return values
 
     def solve(self):
         nodes_num = self.mesh.coordinates2D.shape[0]
@@ -61,7 +61,8 @@ class FEM:
         # dirichlet conditions
         u = np.zeros(shape=(nodes_num, 1))
         for vert_idxs in self.mesh.dirichlet_boundaries:
-            u[vert_idxs] = self.dirichlet_val(self.mesh.coordinates2D[vert_idxs])
+            values = self.dirichlet_val(self.mesh.coordinates2D[vert_idxs])
+            u[vert_idxs] = np.expand_dims(values, 1)
         b -= (A @ u).T[0]
 
         free_nodes = [v for v in range(nodes_num) if v not in self.mesh.dirichlet_boundaries]
