@@ -16,6 +16,7 @@ class Mesh:
         gmsh.initialize()
         gmsh.open(mesh_filename)
 
+        self.nodes_num = None
         self.nodes_of_elem = None
         self.coordinates = None
         self.coordinates2D = None
@@ -36,8 +37,8 @@ class Mesh:
         node_tags, coordinates, _ = gmsh.model.mesh.get_nodes_by_element_type(self.ElementType.TRIANGULAR)
         node_tags = np.array(node_tags, dtype=int)
 
-        max_node_tag = gmsh.model.mesh.get_max_node_tag()
-        self.coordinates = np.empty(shape=(max_node_tag, 3))
+        self.nodes_num = gmsh.model.mesh.get_max_node_tag()
+        self.coordinates = np.empty(shape=(self.nodes_num, 3))
         for i, tag in enumerate(node_tags):
             self.coordinates[tag - 1] = coordinates[3 * i: 3 * (i+1)]
         self.coordinates2D = self.coordinates[:, 0:2]
