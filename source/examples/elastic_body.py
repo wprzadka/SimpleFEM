@@ -40,11 +40,11 @@ def plot_dispalcements(mesh: Mesh, displacements: np.ndarray):
 
 
 if __name__ == '__main__':
-    mesh = Mesh('meshes/rectangle.msh')
+    mesh = Mesh('meshes/nailed_board.msh')
 
     rhs_func = lambda x: np.array([0, 0])
     dirichlet_func = lambda x: np.array([0, 0])
-    neumann_func = lambda x: np.array([-0.1, -0.2])
+    neumann_func = lambda x: np.array([-0.0, -0.5])
 
 
     class MaterialProperty(Enum):
@@ -58,8 +58,8 @@ if __name__ == '__main__':
         rhs_func=rhs_func,
         dirichlet_func=dirichlet_func,
         neumann_func=neumann_func,
-        young_modulus=MaterialProperty.CarbonSteel.value[0],
-        poisson_ratio=MaterialProperty.CarbonSteel.value[1]
+        young_modulus=MaterialProperty.AluminumAlloys.value[0],
+        poisson_ratio=MaterialProperty.AluminumAlloys.value[1]
     )
     results = fem.solve()
     displacements = np.vstack((results[:mesh.nodes_num], results[mesh.nodes_num:])).T

@@ -65,7 +65,7 @@ class ElasticitySetup(FEM):
 
     def solve(self):
         # we have 2 base functions for every node
-        nodes_num = self.mesh.coordinates2D.shape[0]
+        nodes_num = self.mesh.nodes_num
         base_func_num = 2 * nodes_num
         A = np.zeros(shape=(base_func_num, base_func_num))
         b = np.zeros(shape=(base_func_num,))
