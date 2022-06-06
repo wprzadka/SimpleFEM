@@ -1,54 +1,78 @@
-from enum import IntEnum
+from enum import Enum
+from typing import Tuple
 
 import numpy as np
-import gmsh
+import meshio
 import matplotlib.pyplot as plt
 from matplotlib import tri
+from numpy import ndarray
 
 
 class Mesh:
 
-    class ElementType(IntEnum):
-        LINE = 1
-        TRIANGULAR = 2
+    class ElementType(Enum):
+        VERTEX = 'vertex'
+        LINE = 'line'
+        TRIANGULAR = 'triangle'
+
+    elem_to_condition_type = {
+        'vertex': 'points',
+        'line': 'curves',
+        'triangle': 'surfaces'
+    }
 
     def __init__(self, mesh_filename: str):
-        gmsh.initialize()
-        gmsh.open(mesh_filename)
 
-        self.nodes_num = None
-        self.nodes_of_elem = None
-        self.coordinates = None
-        self.coordinates2D = None
-        self.extract_triangular_elements()
+        msh = meshio.read(mesh_filename)
 
-        self.dirichlet_boundaries = np.array([])
-        self.neumann_boundaries = np.array([])
-        self.extract_boundary_conditions()
+        # check if types of elements in mesh are supported
+        elem_types = [t.value for t in self.ElementType]
+        assert all([key in elem_types for key in msh.cells_dict.keys()])
 
-    def extract_triangular_elements(self):
-
-        _, node_tags = gmsh.model.mesh.get_elements_by_type(self.ElementType.TRIANGULAR)
-        node_tags = np.array(node_tags, dtype=int)
-
-        # extract element to nodes mapping
-        self.nodes_of_elem = np.array([tag - 1 for tag in node_tags]).reshape((-1, 3))
-        # extract coordinates of nodes
-        node_tags, coordinates, _ = gmsh.model.mesh.get_nodes_by_element_type(self.ElementType.TRIANGULAR)
-        node_tags = np.array(node_tags, dtype=int)
-
-        self.nodes_num = gmsh.model.mesh.get_max_node_tag()
-        self.coordinates = np.empty(shape=(self.nodes_num, 3))
-        for i, tag in enumerate(node_tags):
-            self.coordinates[tag - 1] = coordinates[3 * i: 3 * (i+1)]
+        self.nodes_of_elem = msh.cells_dict[self.ElementType.TRIANGULAR.value]
+        self.coordinates = msh.points
         self.coordinates2D = self.coordinates[:, 0:2]
+        self.nodes_num = self.coordinates.shape[0]
 
-    def extract_boundary_conditions(self):
-        elem_tags, node_tags = gmsh.model.mesh.get_elements_by_type(self.ElementType.LINE)
-        node_tags = np.array(node_tags, dtype=int)
-        self.dirichlet_boundaries = np.array([[beg - 1, end - 1] for beg, end in node_tags.reshape((-1, 2))])
-        # TODO extract neumann and dirichlet conditions
-        self.neumann_boundaries = np.array([])
+        dirichlet, neumann = self.extract_boundary_conditions(msh)
+        self.dirichlet_boundaries = dirichlet
+        self.neumann_boundaries = neumann
+
+    def extract_boundary_conditions(self, msh) -> Tuple[ndarray, ndarray]:
+        dirichlet = []
+        neumann = []
+        condition_of_elem = self.prepare_physical_groups_mapping(msh)
+
+        physical_groups = msh.cell_data['gmsh:physical']
+        group_idx = 0
+        inner_idx = 0
+        for elem_type, elem_nodes in msh.cells_dict.items():
+            group_conditions = condition_of_elem[self.elem_to_condition_type[elem_type]]
+            for node in elem_nodes:
+                if 'dirichlet' in group_conditions \
+                        and physical_groups[group_idx][inner_idx] in group_conditions['dirichlet']:
+                    dirichlet.append(node)
+                if 'neumann' in group_conditions \
+                        and physical_groups[group_idx][inner_idx] in group_conditions['neumann']:
+                    neumann.append(node)
+
+                inner_idx += 1
+                if inner_idx >= physical_groups[group_idx].size:
+                    inner_idx = 0
+                    group_idx += 1
+
+        return np.array(dirichlet), np.array(neumann)
+
+    def prepare_physical_groups_mapping(self, msh) -> dict:
+        condition_of_elem = {}
+        for key, val in msh.field_data.items():
+            condition_type, element_type = key.split(':')
+            if element_type not in condition_of_elem:
+                condition_of_elem[element_type] = {}
+            if condition_type not in condition_of_elem[element_type]:
+                condition_of_elem[element_type][condition_type] = []
+            condition_of_elem[element_type][condition_type] += list(val)
+        return condition_of_elem
 
     def draw(self):
         triangulation = tri.Triangulation(
@@ -73,5 +97,5 @@ class Mesh:
 
 if __name__ == '__main__':
 
-    mesh = Mesh("meshes/rectangle.msh")
+    mesh = Mesh("meshes/nailed_board.msh")
     mesh.draw()

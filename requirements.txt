@@ -2,3 +2,4 @@ numpy>=1.22,<1.23
 matplotlib>=3.5,<3.6
 gmsh>=4.10,<4.11
 pytest>=7.1,<7.2
+meshio>=2.3,<2.4
