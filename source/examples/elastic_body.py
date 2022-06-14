@@ -42,9 +42,9 @@ def plot_dispalcements(mesh: Mesh, displacements: np.ndarray):
 if __name__ == '__main__':
     mesh = Mesh('meshes/nailed_board.msh')
 
-    rhs_func = lambda x: np.array([0, 0])
+    rhs_func = lambda x: np.array([0, -0.981])
     dirichlet_func = lambda x: np.array([0, 0])
-    neumann_func = lambda x: np.array([-0.0, -0.5])
+    neumann_func = lambda x: np.array([-0.0, -0.0])
 
 
     class MaterialProperty(Enum):
