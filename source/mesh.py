@@ -1,11 +1,11 @@
 from enum import Enum
-from typing import Tuple
+from typing import List, Dict
 
 import numpy as np
 import meshio
 import matplotlib.pyplot as plt
 from matplotlib import tri
-from numpy import ndarray
+import matplotlib.patches as mpatches
 
 
 class Mesh:
@@ -15,11 +15,9 @@ class Mesh:
         LINE = 'line'
         TRIANGULAR = 'triangle'
 
-    elem_to_condition_type = {
-        'vertex': 'points',
-        'line': 'curves',
-        'triangle': 'surfaces'
-    }
+    class BoundaryConditionType(Enum):
+        DIRICHLET = 'dirichlet'
+        NEUMANN = 'neumann'
 
     def __init__(self, mesh_filename: str):
 
@@ -34,62 +32,78 @@ class Mesh:
         self.coordinates2D = self.coordinates[:, 0:2]
         self.nodes_num = self.coordinates.shape[0]
 
-        dirichlet, neumann = self.extract_boundary_conditions(msh)
-        self.dirichlet_boundaries = dirichlet
-        self.neumann_boundaries = neumann
+        self.physical_groups_mapping = self.extract_physical_groups(msh)
+        self.dirichlet_boundaries = np.array([[]])
+        self.neumann_boundaries = np.array([[]])
 
-    def extract_boundary_conditions(self, msh) -> Tuple[ndarray, ndarray]:
-        dirichlet = []
-        neumann = []
+    def extract_physical_groups(self, msh) -> Dict[str, np.ndarray]:
         condition_of_elem = self.prepare_physical_groups_mapping(msh)
+        physical_groups_mapping = {}
 
         physical_groups = msh.cell_data['gmsh:physical']
         group_idx = 0
         inner_idx = 0
         for elem_type, elem_nodes in msh.cells_dict.items():
-            group_conditions = condition_of_elem[self.elem_to_condition_type[elem_type]]
+
             for node in elem_nodes:
-                if 'dirichlet' in group_conditions \
-                        and physical_groups[group_idx][inner_idx] in group_conditions['dirichlet']:
-                    dirichlet.append(node)
-                if 'neumann' in group_conditions \
-                        and physical_groups[group_idx][inner_idx] in group_conditions['neumann']:
-                    neumann.append(node)
+                key = physical_groups[group_idx][inner_idx]
+                condition = condition_of_elem[key]
+                if condition not in physical_groups_mapping:
+                    physical_groups_mapping[condition] = []
+                physical_groups_mapping[condition].append(node)
 
                 inner_idx += 1
                 if inner_idx >= physical_groups[group_idx].size:
                     inner_idx = 0
                     group_idx += 1
 
-        return np.array(dirichlet), np.array(neumann)
+        return {k: np.array(v) for k, v in physical_groups_mapping.items()}
 
-    def prepare_physical_groups_mapping(self, msh) -> dict:
-        condition_of_elem = {}
-        for key, val in msh.field_data.items():
-            condition_type, element_type = key.split(':')
-            if element_type not in condition_of_elem:
-                condition_of_elem[element_type] = {}
-            if condition_type not in condition_of_elem[element_type]:
-                condition_of_elem[element_type][condition_type] = []
-            condition_of_elem[element_type][condition_type] += list(val)
+    def prepare_physical_groups_mapping(self, msh) -> list:
+        condition_of_elem = ['undefined'] * (max([v[0] for v in msh.field_data.values()]) + 1)
+        for group_name, val in msh.field_data.items():
+            condition_of_elem[val[0]] = group_name
         return condition_of_elem
 
-    def draw(self):
+    def get_group_names(self):
+        return self.physical_groups_mapping.keys()
+
+    def set_boundary_condition(self, boundary: BoundaryConditionType, groups: List[str]):
+
+        boundaries = np.concatenate(tuple(self.physical_groups_mapping[name] for name in groups))
+        if boundary == Mesh.BoundaryConditionType.DIRICHLET:
+            self.dirichlet_boundaries = boundaries
+        elif boundary == Mesh.BoundaryConditionType.NEUMANN:
+            self.neumann_boundaries = boundaries
+
+    def draw(self, color_boundaries=False, color_palette=plt.cm.tab10):
         triangulation = tri.Triangulation(
             x=self.coordinates[:, 0],
             y=self.coordinates[:, 1],
             triangles=self.nodes_of_elem
         )
         plt.triplot(triangulation)
-        for boundaries, color in [
-            (self.dirichlet_boundaries, (1, 0, 0, 0.5)),
-            (self.neumann_boundaries, (0, 1, 0, 0.5))
-        ]:
-            if boundaries.size == 0:
-                continue
-            boundary_coords = np.array([self.coordinates[idxs] for idxs in boundaries])
-            for dx, dy in zip(boundary_coords[:, :, 0], boundary_coords[:, :, 1]):
-                plt.plot(dx, dy, color=color)
+
+        if color_boundaries:
+            for boundary, color in [
+                (self.dirichlet_boundaries, (1, 0, 0, 0.5)),
+                (self.neumann_boundaries, (0, 1, 0, 0.5))
+            ]:
+                if boundary.size == 0:
+                    continue
+                boundary_coords = np.array([self.coordinates[idxs] for idxs in boundary])
+                for dx, dy in zip(boundary_coords[:, :, 0], boundary_coords[:, :, 1]):
+                    plt.plot(dx, dy, color=color)
+        else:
+            patches = []
+            for idx, (name, group) in enumerate(self.physical_groups_mapping.items()):
+                if group.size == 0:
+                    continue
+                boundary_coords = np.array([self.coordinates[idxs] for idxs in group])
+                for dx, dy in zip(boundary_coords[:, :, 0], boundary_coords[:, :, 1]):
+                    plt.plot(dx, dy, color=color_palette(idx))
+                patches.append(mpatches.Patch(color=color_palette(idx), label=name))
+            plt.legend(handles=patches, loc='upper right')
 
         plt.savefig('mesh.png')
         plt.close()
@@ -97,5 +111,14 @@ class Mesh:
 
 if __name__ == '__main__':
 
-    mesh = Mesh("meshes/nailed_board.msh")
+    # mesh = Mesh("meshes/nailed_board.msh")
+    # print(mesh.get_groups())
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, 'dirichlet:curves')
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, 'neumann:curves')
+
+    mesh = Mesh("meshes/bridge.msh")
+    print(mesh.get_group_names())
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['left_edge_bridge', 'right_edge_bridge'])
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, 'up_left_bridge')
+
     mesh.draw()

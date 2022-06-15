@@ -40,11 +40,19 @@ def plot_dispalcements(mesh: Mesh, displacements: np.ndarray):
 
 
 if __name__ == '__main__':
-    mesh = Mesh('meshes/nailed_board.msh')
+    # mesh = Mesh('meshes/nailed_board.msh')
+    # print(mesh.physical_groups_mapping)
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['dirichlet:curves'])
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, ['neumann:curves'])
 
-    rhs_func = lambda x: np.array([0, -0.981])
+    mesh = Mesh('meshes/bridge.msh')
+    print(mesh.physical_groups_mapping)
+    mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['left_edge_bridge', 'right_edge_bridge'])
+    mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, ['up_left_bridge'])
+
+    rhs_func = lambda x: np.array([0, -0.2])
     dirichlet_func = lambda x: np.array([0, 0])
-    neumann_func = lambda x: np.array([-0.0, -0.0])
+    neumann_func = lambda x: np.array([-0.0, -1.0])
 
 
     class MaterialProperty(Enum):
@@ -58,8 +66,8 @@ if __name__ == '__main__':
         rhs_func=rhs_func,
         dirichlet_func=dirichlet_func,
         neumann_func=neumann_func,
-        young_modulus=MaterialProperty.AluminumAlloys.value[0],
-        poisson_ratio=MaterialProperty.AluminumAlloys.value[1]
+        young_modulus=MaterialProperty.CarbonSteel.value[0],
+        poisson_ratio=MaterialProperty.CarbonSteel.value[1]
     )
     results = fem.solve()
     displacements = np.vstack((results[:mesh.nodes_num], results[mesh.nodes_num:])).T
