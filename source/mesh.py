@@ -33,8 +33,8 @@ class Mesh:
         self.nodes_num = self.coordinates.shape[0]
 
         self.physical_groups_mapping = self.extract_physical_groups(msh)
-        self.dirichlet_boundaries = np.array([[]])
-        self.neumann_boundaries = np.array([[]])
+        self.dirichlet_boundaries = np.array([])
+        self.neumann_boundaries = np.array([])
 
     def extract_physical_groups(self, msh) -> Dict[str, np.ndarray]:
         condition_of_elem = self.prepare_physical_groups_mapping(msh)
