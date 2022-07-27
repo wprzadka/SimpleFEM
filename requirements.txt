@@ -3,3 +3,4 @@ matplotlib>=3.5,<3.6
 gmsh>=4.10,<4.11
 pytest>=7.1,<7.2
 meshio>=5.3,<5.4
+quadpy~=0.16.16
