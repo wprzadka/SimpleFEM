@@ -68,12 +68,12 @@ class Mesh:
     def get_group_names(self):
         return self.physical_groups_mapping.keys()
 
-    def set_boundary_condition(self, boundary: BoundaryConditionType, groups: List[str]):
+    def set_boundary_condition(self, boundary_type: BoundaryConditionType, groups: List[str]):
 
         boundaries = np.concatenate(tuple(self.physical_groups_mapping[name] for name in groups))
-        if boundary == Mesh.BoundaryConditionType.DIRICHLET:
+        if boundary_type == Mesh.BoundaryConditionType.DIRICHLET:
             self.dirichlet_boundaries = boundaries
-        elif boundary == Mesh.BoundaryConditionType.NEUMANN:
+        elif boundary_type == Mesh.BoundaryConditionType.NEUMANN:
             self.neumann_boundaries = boundaries
 
     def draw(self, color_boundaries=False, color_palette=plt.cm.tab10):

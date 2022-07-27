@@ -1,10 +1,7 @@
-from typing import Optional
-
 import numpy as np
 
 from source.fem import utils
 from source.fem.fem2d import FEM
-from source.mesh import Mesh
 
 
 class ElasticitySetup(FEM):
