@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable, Any, Union
 import numpy as np
 
 from source.fem import utils
@@ -9,9 +9,9 @@ class FEM:
     def __init__(
             self,
             mesh: Mesh,
-            rhs_func: callable,
-            dirichlet_func: Optional[callable] = None,
-            neumann_func: Optional[callable] = None
+            rhs_func: Callable[[np.ndarray], Union[float, np.ndarray]],
+            dirichlet_func: Optional[Callable[[np.ndarray], Union[float, np.ndarray]]] = None,
+            neumann_func: Optional[Callable[[np.ndarray], Union[float, np.ndarray]]] = None
     ):
         assert not (mesh.dirichlet_boundaries.size > 0 and dirichlet_func is None)
         assert not (mesh.neumann_boundaries.size > 0 and neumann_func is None)
