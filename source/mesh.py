@@ -31,6 +31,7 @@ class Mesh:
         self.coordinates = msh.points
         self.coordinates2D = self.coordinates[:, 0:2]
         self.nodes_num = self.coordinates.shape[0]
+        self.elems_num = len(self.nodes_of_elem)
 
         self.physical_groups_mapping = self.extract_physical_groups(msh)
         self.dirichlet_boundaries = np.array([])
