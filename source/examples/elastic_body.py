@@ -1,42 +1,11 @@
 from enum import Enum
 
-import matplotlib.pyplot as plt
 import numpy as np
 
+
+from source.fem.plotting_utils import plot_results, plot_displacements, plot_stress
 from source.mesh import Mesh
-from matplotlib import tri
-
 from source.fem.elasticity_setup import ElasticitySetup
-
-
-def plot_results(mesh: Mesh, magnitudes: np.ndarray):
-    triangulation = tri.Triangulation(
-        x=mesh.coordinates2D[:, 0],
-        y=mesh.coordinates2D[:, 1],
-        triangles=mesh.nodes_of_elem
-    )
-    plt.tricontourf(triangulation, magnitudes)
-    plt.colorbar()
-    plt.savefig('results.png')
-    plt.close()
-
-
-def plot_dispalcements(mesh: Mesh, displacements: np.ndarray):
-    before = tri.Triangulation(
-        x=mesh.coordinates2D[:, 0],
-        y=mesh.coordinates2D[:, 1],
-        triangles=mesh.nodes_of_elem
-    )
-    plt.triplot(before, color='#1f77b4')
-    after = tri.Triangulation(
-        x=mesh.coordinates2D[:, 0] + displacements[:, 0],
-        y=mesh.coordinates2D[:, 1] + displacements[:, 1],
-        triangles=mesh.nodes_of_elem
-    )
-    plt.triplot(after, color='#ff7f0e')
-    plt.grid()
-    plt.savefig('displacements.png')
-    plt.close()
 
 
 if __name__ == '__main__':
@@ -75,4 +44,5 @@ if __name__ == '__main__':
 
     # plot results of FEM
     plot_results(mesh, displacement_magnitudes)
-    plot_dispalcements(mesh, displacements)
+    plot_displacements(mesh, displacements)
+

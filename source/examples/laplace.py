@@ -1,9 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
+from source.fem.plotting_utils import plot_results
 from source.mesh import Mesh
-from matplotlib import tri
-
 from source.fem.laplace_setup import LaplaceSetup
 
 
@@ -12,18 +11,6 @@ def plot_exact_solution(exact: callable):
     exact_values = np.reshape(exact(np.stack((X, Y))), X.shape)
     plt.contour(X, Y, exact_values)
     plt.savefig('exact.png')
-    plt.close()
-
-
-def plot_results(results: np.ndarray):
-    triangulation = tri.Triangulation(
-        x=mesh.coordinates2D[:, 0],
-        y=mesh.coordinates2D[:, 1],
-        triangles=mesh.nodes_of_elem
-    )
-    plt.tricontourf(triangulation, results)
-    plt.colorbar()
-    plt.savefig('results.png')
     plt.close()
 
 
@@ -49,7 +36,7 @@ if __name__ == '__main__':
     print(results)
 
     # plot results of FEM
-    plot_results(results)
+    plot_results(mesh, results)
 
     # validation
     # exact = lambda x: -np.sin(x[0] * np.pi) * np.sin(x[1] * np.pi) / (2 * np.pi ** 2)
