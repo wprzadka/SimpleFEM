@@ -26,6 +26,9 @@ class FEM:
         return T / 3 * self.rhs_func(center)
 
     def neumann_val(self, vertices: np.array) -> float:
+        # single vertex
+        if vertices.shape[0] == 1:
+            return self.neumann_func(vertices)
         # vertices = [[x0, y0], [x1, y1]]
         center = utils.center_of_mass(vertices)
         length = np.sqrt((vertices[1, 0] - vertices[0, 0]) ** 2 + (vertices[1, 1] - vertices[0, 1]) ** 2)
