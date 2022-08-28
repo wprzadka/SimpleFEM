@@ -15,9 +15,9 @@ class ElasticitySetup(FEM):
         super(ElasticitySetup, self).__init__(**kwargs)
         self.young_modulus = young_modulus
         self.poisson_ratio = poisson_ratio
-        self.lamb = self.young_modulus * self.poisson_ratio / (1 - self.poisson_ratio ** 2)
         # TODO check this
-        self.mu = self.young_modulus / (1 - self.poisson_ratio)
+        self.lamb = (self.young_modulus * self.poisson_ratio) / ((1 + self.poisson_ratio) * (1 - 2 * self.poisson_ratio))
+        self.mu = self.young_modulus / (2 * (1 + self.poisson_ratio))
 
     def stima3aux_symetric(self, coords: np.ndarray):
         # coords = np.array([['x1', 'y1'], ['x2', 'y2'], ['x3', 'y3']])
