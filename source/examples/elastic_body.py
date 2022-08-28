@@ -9,34 +9,36 @@ from source.fem.elasticity_setup import ElasticitySetup
 
 
 if __name__ == '__main__':
-    # mesh = Mesh('meshes/nailed_board.msh')
-    # print(mesh.physical_groups_mapping)
-    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['dirichlet:curves'])
-    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, ['neumann:curves'])
-
-    mesh = Mesh('meshes/bridge.msh')
+    mesh = Mesh('meshes/rectangle.msh')
+    mesh.draw()
     print(mesh.physical_groups_mapping)
-    mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['left_edge_bridge', 'right_edge_bridge'])
-    mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, ['up_left_bridge'])
+    mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['left'])
+    mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, ['right'])
 
-    rhs_func = lambda x: np.array([0, -0.2])
+    # mesh = Mesh('meshes/bridge.msh')
+    # print(mesh.physical_groups_mapping)
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.DIRICHLET, ['left_edge_bridge', 'right_edge_bridge'])
+    # mesh.set_boundary_condition(Mesh.BoundaryConditionType.NEUMANN, ['up_left_bridge'])
+
+    rhs_func = lambda x: np.array([0, -9.81])
     dirichlet_func = lambda x: np.array([0, 0])
-    neumann_func = lambda x: np.array([-0.0, -1.0])
-
+    neumann_func = lambda x: np.array([0, -9.81 * 1e2])  # weight of 100kg in earth gravity
 
     class MaterialProperty(Enum):
-        AluminumAlloys = (10.2, 0.33)
-        BerylliumCopper = (18.0, 0.29)
-        CarbonSteel = (29.0, 0.29)
-        CastIron = (14.5, 0.21)
+        CarbonSteel = (200e9, 0.28)
+        Gold = (78e9, 0.44)
+        Diamond = (1035e9, 0.29)  # Poisson's ratio = 0.1-0.29
+        Polystyrene = (2.8e9, 0.38)  # Young's modulus = 2.8-3.5 GPa
+        Silicon = (107e9, 0.27)
+        Mica = (34.5e9, 0.205)
 
     fem = ElasticitySetup(
         mesh=mesh,
         rhs_func=rhs_func,
         dirichlet_func=dirichlet_func,
         neumann_func=neumann_func,
-        young_modulus=MaterialProperty.CarbonSteel.value[0],
-        poisson_ratio=MaterialProperty.CarbonSteel.value[1]
+        young_modulus=MaterialProperty.Polystyrene.value[0],
+        poisson_ratio=MaterialProperty.Polystyrene.value[1]
     )
     results = fem.solve()
     displacements = np.vstack((results[:mesh.nodes_num], results[mesh.nodes_num:])).T
@@ -44,5 +46,6 @@ if __name__ == '__main__':
 
     # plot results of FEM
     plot_results(mesh, displacement_magnitudes)
-    plot_displacements(mesh, displacements)
+    zoom_factor = 1e4
+    plot_displacements(mesh, displacements * zoom_factor)
 
