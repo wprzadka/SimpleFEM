@@ -1,17 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
 from source.utilities.plotting_utils import plot_results
 from source.mesh import Mesh
 from source.fem.laplace_setup import LaplaceSetup
-
-
-def plot_exact_solution(exact: callable):
-    X, Y = np.meshgrid(np.linspace(0, 1), np.linspace(0, 1))
-    exact_values = np.reshape(exact(np.stack((X, Y))), X.shape)
-    plt.contour(X, Y, exact_values)
-    plt.savefig('exact.png')
-    plt.close()
 
 
 if __name__ == '__main__':
@@ -20,8 +9,6 @@ if __name__ == '__main__':
     mesh.draw()
 
     rhs_func = lambda x: 100 * ((x[0] - 0.2) ** 2 + (x[1] - 0.2) ** 2)
-    # dirichlet_func = lambda x: 1 if x[0] < 0.1 or x[0] > 0.9 else 0
-    # dirichlet_func = lambda x: 1
     neumann_func = lambda x: 100
 
     maze_edges = [v for v in mesh.get_group_names() if 'line' in v]
@@ -39,7 +26,3 @@ if __name__ == '__main__':
 
     # plot results of FEM
     plot_results(mesh, results)
-
-    # validation
-    # exact = lambda x: -np.sin(x[0] * np.pi) * np.sin(x[1] * np.pi) / (2 * np.pi ** 2)
-    # plot_exact_solution(exact)
