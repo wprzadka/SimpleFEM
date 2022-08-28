@@ -60,7 +60,26 @@ class ElasticitySetup(FEM):
         T, xy_diff_mat = self.stima3aux_asymetric(coords)
         return (self.lamb * xy_diff_mat.T + 0.5 * self.mu * xy_diff_mat) / (4 * T)
 
-    def solve(self):
+    def construct_local_stiffness_matrix(self, elem_idx: int):
+        A = np.zeros(shape=(6, 6))
+        nodes = self.mesh.nodes_of_elem[elem_idx]
+        for func, beg_x, beg_y in [
+            (self.stima3xx, 0, 0),
+            (self.stima3xy, 3, 0),
+            (self.stima3yx, 0, 3),
+            (self.stima3yy, 3, 3)
+        ]:
+            local = func(self.mesh.coordinates2D[nodes])
+            for y, col in enumerate(nodes):
+                for x, row in enumerate(nodes):
+                    A[x + beg_x, y + beg_y] += local[x, y]
+        return A
+
+    def solve(self, modifier: np.ndarray = None):
+
+        if modifier is None:
+            modifier = np.ones(shape=self.mesh.elems_num)
+
         # we have 2 base functions for every node
         nodes_num = self.mesh.nodes_num
         base_func_num = 2 * nodes_num
@@ -74,11 +93,11 @@ class ElasticitySetup(FEM):
             (self.stima3yx, 0, nodes_num),
             (self.stima3yy, nodes_num, nodes_num)
         ]:
-            for nodes in self.mesh.nodes_of_elem:
+            for elem_idx, nodes in enumerate(self.mesh.nodes_of_elem):
                 local = func(self.mesh.coordinates2D[nodes])
                 for y, col in enumerate(nodes):
                     for x, row in enumerate(nodes):
-                        A[row + beg_x, col + beg_y] += local[x, y]
+                        A[row + beg_x, col + beg_y] += modifier[elem_idx] * local[x, y]
         # TODO optimize with Ayx = Axy.T
         assert (A[nodes_num: -1, 0: nodes_num] == A[0: nodes_num, nodes_num: -1].T).all()
 
