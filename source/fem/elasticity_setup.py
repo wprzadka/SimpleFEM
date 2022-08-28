@@ -15,7 +15,7 @@ class ElasticitySetup(FEM):
         super(ElasticitySetup, self).__init__(**kwargs)
         self.young_modulus = young_modulus
         self.poisson_ratio = poisson_ratio
-        # TODO check this
+
         self.lamb = (self.young_modulus * self.poisson_ratio) / ((1 + self.poisson_ratio) * (1 - 2 * self.poisson_ratio))
         self.mu = self.young_modulus / (2 * (1 + self.poisson_ratio))
 
@@ -37,7 +37,7 @@ class ElasticitySetup(FEM):
         # coords = np.array([['x1', 'y1'], ['x2', 'y2'], ['x3', 'y3']])
         T = utils.area_of_triangle(coords)
 
-        # xy_diff_mat[i, j] = (x[i+2] - x[i+1]) * (x[j+2] - x[j+1])
+        # xy_diff_mat[i, j] = (x[i+2] - x[i+1]) * (y[j+1] - y[j+2])
         x_diff = np.roll(coords[:, 0], 1) - np.roll(coords[:, 0], 2)
         y_diff = np.roll(coords[:, 1], -1) - np.roll(coords[:, 1], -2)
         xy_diff_mat = np.expand_dims(x_diff, 1) @ np.expand_dims(y_diff, 0)
@@ -80,6 +80,7 @@ class ElasticitySetup(FEM):
                     for x, row in enumerate(nodes):
                         A[row + beg_x, col + beg_y] += local[x, y]
         # TODO optimize with Ayx = Axy.T
+        assert (A[nodes_num: -1, 0: nodes_num] == A[0: nodes_num, nodes_num: -1].T).all()
 
         # assembly rhs vector
         for nodes in self.mesh.nodes_of_elem:
