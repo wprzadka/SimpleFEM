@@ -17,6 +17,8 @@ def plot_exact_solution(exact: callable):
 if __name__ == '__main__':
 
     mesh = Mesh('meshes/maze.msh')
+    mesh.draw()
+
     rhs_func = lambda x: 100 * ((x[0] - 0.2) ** 2 + (x[1] - 0.2) ** 2)
     # dirichlet_func = lambda x: 1 if x[0] < 0.1 or x[0] > 0.9 else 0
     # dirichlet_func = lambda x: 1
