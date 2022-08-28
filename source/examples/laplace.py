@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from source.fem.plotting_utils import plot_results
+from source.utilities.plotting_utils import plot_results
 from source.mesh import Mesh
 from source.fem.laplace_setup import LaplaceSetup
 

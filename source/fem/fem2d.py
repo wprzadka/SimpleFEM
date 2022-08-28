@@ -1,7 +1,7 @@
-from typing import Optional, Callable, Any, Union
+from typing import Optional, Callable, Union
 import numpy as np
 
-from source.fem import utils
+from source.utilities import computation_utils as utils
 from source.mesh import Mesh
 
 

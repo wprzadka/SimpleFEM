@@ -4,7 +4,7 @@ import numpy as np
 import quadpy
 import pytest
 
-from source.fem import utils
+from source.utilities import computation_utils as utils
 from source.fem.fem2d import FEM
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import source.fem.utils as utils
+import source.utilities.computation_utils as utils
 
 
 @pytest.mark.parametrize('coords, area', [
