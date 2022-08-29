@@ -16,7 +16,7 @@ def plot_results(mesh: Mesh, magnitudes: np.ndarray, file_name: str = 'results.p
     plt.close()
 
 
-def plot_displacements(mesh: Mesh, displacements: np.ndarray):
+def plot_displacements(mesh: Mesh, displacements: np.ndarray, file_name: str = 'displacements.png'):
     before = tri.Triangulation(
         x=mesh.coordinates2D[:, 0],
         y=mesh.coordinates2D[:, 1],
@@ -30,7 +30,7 @@ def plot_displacements(mesh: Mesh, displacements: np.ndarray):
     )
     plt.triplot(after, color='#ff7f0e')
     plt.grid()
-    plt.savefig('displacements.png')
+    plt.savefig(file_name)
     plt.close()
 
 
