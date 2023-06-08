@@ -18,6 +18,12 @@ def base_func(x: np.ndarray, vertices: np.ndarray):
     denominator = np.concatenate((np.ones((3, 1)), vertices), 1)
     return np.linalg.det(numerator) / np.linalg.det(denominator)
 
+def interp_value(x: np.ndarray, verts: np.ndarray, values: np.ndarray):
+    points = np.hstack((verts, values[:, None]))
+    inner_vecs = points[1:] - points[0]
+    normal = np.cross(inner_vecs[0], inner_vecs[1])
+    val = values[0] - ((x - verts[0]) @ normal[:2]) / normal[2]
+    return val
 
 def grad_base_func(vertices: np.ndarray, idx: int):
     i = (idx + 1) % 3
