@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.sparse import lil_matrix, csr_matrix
+from scipy.sparse.linalg import spsolve
 
 from source.utilities import computation_utils as utils
 from source.fem.fem2d import FEM
@@ -83,7 +85,7 @@ class ElasticitySetup(FEM):
         # we have 2 base functions for every node
         nodes_num = self.mesh.nodes_num
         base_func_num = 2 * nodes_num
-        A = np.zeros(shape=(base_func_num, base_func_num))
+        A = lil_matrix((base_func_num, base_func_num))
         b = np.zeros(shape=(base_func_num,))
 
         # Assembly stiffness matrix
@@ -99,7 +101,7 @@ class ElasticitySetup(FEM):
                     for x, row in enumerate(nodes):
                         A[row + beg_x, col + beg_y] += modifier[elem_idx] * local[x, y]
         # TODO optimize with Ayx = Axy.T
-        assert (A[nodes_num: -1, 0: nodes_num] == A[0: nodes_num, nodes_num: -1].T).all()
+        # assert (A[nodes_num: -1, 0: nodes_num] == A[0: nodes_num, nodes_num: -1].T).all()
 
         # assembly rhs vector
         for nodes in self.mesh.nodes_of_elem:
@@ -126,7 +128,10 @@ class ElasticitySetup(FEM):
         free_nodes = free_nodes + [v + nodes_num for v in free_nodes]
 
         # solve
-        u_free = np.linalg.solve(A[free_nodes][:, free_nodes], b[free_nodes])
+        u_free = spsolve(
+            csr_matrix(A[free_nodes][:, free_nodes]),
+            b[free_nodes, np.newaxis]
+        )
         w = np.squeeze(u.copy(), 1)
         w[free_nodes] = u_free
         return w
